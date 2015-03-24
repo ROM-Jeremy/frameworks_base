@@ -141,6 +141,8 @@ public class StatusBarHeaderView extends RelativeLayout implements View.OnClickL
         requestCaptureValues();
     };
 
+    private boolean mQSCSwitch = false;
+
     public StatusBarHeaderView(Context context, AttributeSet attrs) {
         super(context, attrs);
         loadShowBatteryTextSetting();
@@ -858,6 +860,8 @@ public class StatusBarHeaderView extends RelativeLayout implements View.OnClickL
 
         private void handleShowingDetail(final QSTile.DetailAdapter detail) {
             final boolean showingDetail = detail != null;
+            mQSCSwitch = Settings.System.getInt(getContext().getContentResolver(),
+                    Settings.System.QS_COLOR_SWITCH, 0) == 1;
             transition(mClock, !showingDetail);
             transition(mDateGroup, !showingDetail);
             if (mAlarmShowing) {
@@ -870,7 +874,9 @@ public class StatusBarHeaderView extends RelativeLayout implements View.OnClickL
                         getContext().getContentResolver(),
                         Settings.System.QS_TEXT_COLOR, 0xffffffff);
                 mQsDetailHeaderTitle.setText(detail.getTitle());
-                mQsDetailHeaderTitle.setTextColor(color);
+                if (mQSCSwitch) {
+                    mQsDetailHeaderTitle.setTextColor(color);
+                }
                 final Boolean toggleState = detail.getToggleState();
                 if (toggleState == null) {
                     mQsDetailHeaderSwitch.setVisibility(INVISIBLE);
@@ -919,5 +925,64 @@ public class StatusBarHeaderView extends RelativeLayout implements View.OnClickL
     @Override
     public void onDetachedFromWindow() {
         super.onDetachedFromWindow();
+
+    class SettingsObserver extends UserContentObserver {
+        SettingsObserver(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        protected void observe() {
+            super.observe();
+
+            ContentResolver resolver = mContext.getContentResolver();
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.STATUS_BAR_SHOW_WEATHER), false, this, UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.STATUS_BAR_BATTERY_STYLE), false, this, UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.STATUS_BAR_SHOW_BATTERY_PERCENT), false, this, UserHandle.USER_ALL);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.QS_COLOR_SWITCH), false, this, UserHandle.USER_ALL);
+            update();
+        }
+
+        @Override
+        protected void unobserve() {
+            super.unobserve();
+
+            ContentResolver resolver = mContext.getContentResolver();
+            resolver.unregisterContentObserver(this);
+        }
+
+        @Override
+        public void update() {
+
+            ContentResolver resolver = mContext.getContentResolver();
+            int currentUserId = ActivityManager.getCurrentUser();
+            int batteryStyle = Settings.System.getIntForUser(resolver,
+                    Settings.System.STATUS_BAR_BATTERY_STYLE, 0, currentUserId);
+            boolean showExpandedBatteryPercentage = Settings.System.getIntForUser(resolver,
+                    Settings.System.STATUS_BAR_SHOW_BATTERY_PERCENT, 0, currentUserId) == 0;
+
+            switch (batteryStyle) {
+                case 4: //BATTERY_METER_GONE
+                case 6: //BATTERY_METER_TEXT
+                    showExpandedBatteryPercentage = false;
+                    break;
+                default:
+                    break;
+            }
+
+            mShowBatteryTextExpanded = showExpandedBatteryPercentage;
+            mShowWeather = Settings.System.getInt(
+            	    resolver, Settings.System.STATUS_BAR_SHOW_WEATHER, 0) == 1;
+
+            mQSCSwitch = Settings.System.getInt(
+                    resolver, Settings.System.QS_COLOR_SWITCH, 0) == 1;
+
+            updateVisibilities();
+            requestCaptureValues();
+        }
     }
 }
