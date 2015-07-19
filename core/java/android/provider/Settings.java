@@ -2244,6 +2244,36 @@ public final class Settings {
         public static final String BUTTON_BACKLIGHT_TIMEOUT = "button_backlight_timeout";
 
         /**
+         * Color of the quick settings panel background
+         * @hide
+         */
+        public static final String QS_BACKGROUND_COLOR = "qs_background_color";
+
+        /**
+         * Color of the quick settings icons
+         * @hide
+         */
+        public static final String QS_ICON_COLOR = "qs_icons_color";
+
+        /**
+         * Color of the quick settings text
+         * @hide
+         */
+        public static final String QS_TEXT_COLOR = "qs_text_color";
+
+        /**
+         * Transparent shade
+         * @hide
+         */
+        public static final String QS_TRANSPARENT_SHADE = "qs_transparent_shade";
+
+        /**
+         * Transparent shade
+         * @hide
+         */
+        public static final String QS_COLOR_SWITCH = "qs_color_switch";
+
+        /**
          * Control whether the process CPU usage meter should be shown.
          *
          * @deprecated Use {@link Global#SHOW_PROCESSES} instead
