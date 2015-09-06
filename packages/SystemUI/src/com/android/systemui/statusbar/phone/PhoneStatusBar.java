@@ -625,7 +625,6 @@ public class PhoneStatusBar extends BaseStatusBar implements DemoMode,
             updateBatteryLevelText();
             mBatteryLevel.setVisibility(mShowBatteryText ? View.VISIBLE : View.GONE);
 
-
             mBatterySaverBarColor = Settings.System.getIntForUser(
                     resolver, Settings.System.BATTERY_SAVER_MODE_COLOR, 1, UserHandle.USER_CURRENT) == 1;
 
