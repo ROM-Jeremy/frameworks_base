@@ -24,6 +24,7 @@ import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.R;
 import com.android.internal.util.slim.Action;
 import com.android.internal.util.slim.ActionConfig;
+import com.android.internal.util.slim.OnTheGoActions;
 import com.android.internal.util.slim.PolicyConstants;
 import com.android.internal.util.slim.PolicyHelper;
 import com.android.internal.util.slim.ImageHelper;
@@ -232,6 +233,34 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
                 PolicyHelper.getPowerMenuConfigWithDescription(
                 mContext, "shortcut_action_power_menu_values",
                 "shortcut_action_power_menu_entries");
+
+        // next: On-The-Go, if enabled
+        boolean showOnTheGo = Settings.System.getBoolean(mContext.getContentResolver(),
+                Settings.System.POWER_MENU_ONTHEGO_ENABLED, false);
+        if (showOnTheGo) {
+            mItems.add(
+                new SinglePressAction(com.android.internal.R.drawable.ic_lock_onthego,
+                        R.string.global_action_onthego) {
+
+                        public void onPress() {
+                            OnTheGoActions.processAction(mContext,
+                                    OnTheGoActions.ACTION_ONTHEGO_TOGGLE);
+                        }
+
+                        public boolean onLongPress() {
+                            return false;
+                        }
+
+                        public boolean showDuringKeyguard() {
+                            return true;
+                        }
+
+                        public boolean showBeforeProvisioning() {
+                            return true;
+                        }
+                    }
+            );
+        }
 
         ArraySet<String> addedKeys = new ArraySet<String>();
         for (final ActionConfig config : powerMenuConfig) {
@@ -486,6 +515,15 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
                 }
             }
         }
+    }
+
+    private void startOnTheGo() {
+        final ComponentName cn = new ComponentName("com.android.systemui",
+                "com.android.systemui.slim.onthego.OnTheGoService");
+        final Intent startIntent = new Intent();
+        startIntent.setComponent(cn);
+        startIntent.setAction("start");
+        mContext.startService(startIntent);
     }
 
     private void prepareDialog() {
